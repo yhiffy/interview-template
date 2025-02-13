@@ -1,8 +1,6 @@
-import { put } from '@vercel/blob';
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
-
-import { auth } from '@/app/(auth)/auth';
+import {NextResponse} from 'next/server';
+import {z} from 'zod';
+import {auth} from '@/app/(auth)/auth';
 
 // Use Blob instead of File since File is not available in Node.js environment
 const FileSchema = z.object({
@@ -49,13 +47,21 @@ export async function POST(request: Request) {
     // Get filename from formData since Blob doesn't have name property
     const filename = (formData.get('file') as File).name;
     const fileBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(fileBuffer);
 
     try {
-      const data = await put(`${filename}`, fileBuffer, {
-        access: 'public',
-      });
+      // Generate unique filename with timestamp
+      const timestamp = Date.now();
+      const uniqueFilename = `${timestamp}-${filename}`;
 
-      return NextResponse.json(data);
+      // Create data URL for immediate preview
+      const dataURL = `data:${file.type};base64,${buffer.toString('base64')}`;
+
+      return NextResponse.json({
+        url: dataURL,
+        pathname: `/uploads/${uniqueFilename}`,
+        contentType: file.type
+      });
     } catch (error) {
       return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
     }
