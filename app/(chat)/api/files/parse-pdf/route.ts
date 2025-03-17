@@ -47,6 +47,7 @@ export async function POST(request: Request) {
     // parse PDF
     const data = await pdf(fileBuffer);
     const rawText = data.text || "";
+    const isInvoice = rawText.toLowerCase().includes("invoice");
 
     return NextResponse.json({
       message: "PDF uploaded",
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
       url: "",
       pathname: "",
       rawText,
+      isInvoice,
     });
   } catch (error) {
     console.error("Failed to upload invoice", error);
