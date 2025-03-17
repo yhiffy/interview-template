@@ -3,28 +3,29 @@ import {
   createDataStreamResponse,
   smoothStream,
   streamText,
-} from 'ai';
+} from "ai";
 
-import { auth } from '@/app/(auth)/auth';
-import { myProvider } from '@/lib/ai/models';
-import { systemPrompt } from '@/lib/ai/prompts';
+import { auth } from "@/app/(auth)/auth";
+import { myProvider } from "@/lib/ai/models";
+import { systemPrompt } from "@/lib/ai/prompts";
 import {
   deleteChatById,
   getChatById,
   saveChat,
   saveMessages,
-} from '@/lib/db/queries';
+} from "@/lib/db/queries";
 import {
   generateUUID,
   getMostRecentUserMessage,
   sanitizeResponseMessages,
-} from '@/lib/utils';
+} from "@/lib/utils";
 
-import { generateTitleFromUserMessage } from '../../actions';
-import { createDocument } from '@/lib/ai/tools/create-document';
-import { updateDocument } from '@/lib/ai/tools/update-document';
-import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
-import { getWeather } from '@/lib/ai/tools/get-weather';
+import { generateTitleFromUserMessage } from "../../actions";
+import { createDocument } from "@/lib/ai/tools/create-document";
+import { updateDocument } from "@/lib/ai/tools/update-document";
+import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
+import { getWeather } from "@/lib/ai/tools/get-weather";
+import { analyseInvoice } from "@/lib/ai/tools/analyse-invoice";
 
 export const maxDuration = 60;
 
@@ -39,13 +40,13 @@ export async function POST(request: Request) {
   const session = await auth();
 
   if (!session || !session.user || !session.user.id) {
-    return new Response('Unauthorized', { status: 401 });
+    return new Response("Unauthorized", { status: 401 });
   }
 
   const userMessage = getMostRecentUserMessage(messages);
 
   if (!userMessage) {
-    return new Response('No user message found', { status: 400 });
+    return new Response("No user message found", { status: 400 });
   }
 
   const chat = await getChatById({ id });
@@ -67,15 +68,16 @@ export async function POST(request: Request) {
         messages,
         maxSteps: 5,
         experimental_activeTools:
-          selectedChatModel === 'chat-model-reasoning'
+          selectedChatModel === "chat-model-reasoning"
             ? []
             : [
-                'getWeather',
-                'createDocument',
-                'updateDocument',
-                'requestSuggestions',
+                "getWeather",
+                "createDocument",
+                "updateDocument",
+                "requestSuggestions",
+                "analyseInvoice",
               ],
-        experimental_transform: smoothStream({ chunking: 'word' }),
+        experimental_transform: smoothStream({ chunking: "word" }),
         experimental_generateMessageId: generateUUID,
         tools: {
           getWeather,
@@ -85,6 +87,7 @@ export async function POST(request: Request) {
             session,
             dataStream,
           }),
+          analyseInvoice,
         },
         onFinish: async ({ response, reasoning }) => {
           if (session.user?.id) {
@@ -106,13 +109,13 @@ export async function POST(request: Request) {
                 }),
               });
             } catch (error) {
-              console.error('Failed to save chat');
+              console.error("Failed to save chat");
             }
           }
         },
         experimental_telemetry: {
           isEnabled: true,
-          functionId: 'stream-text',
+          functionId: "stream-text",
         },
       });
 
@@ -121,23 +124,23 @@ export async function POST(request: Request) {
       });
     },
     onError: () => {
-      return 'Oops, an error occured!';
+      return "Oops, an error occured!";
     },
   });
 }
 
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+  const id = searchParams.get("id");
 
   if (!id) {
-    return new Response('Not Found', { status: 404 });
+    return new Response("Not Found", { status: 404 });
   }
 
   const session = await auth();
 
   if (!session || !session.user) {
-    return new Response('Unauthorized', { status: 401 });
+    return new Response("Unauthorized", { status: 401 });
   }
 
   try {
@@ -145,9 +148,9 @@ export async function DELETE(request: Request) {
 
     await deleteChatById({ id });
 
-    return new Response('Chat deleted', { status: 200 });
+    return new Response("Chat deleted", { status: 200 });
   } catch (error) {
-    return new Response('An error occurred while processing your request', {
+    return new Response("An error occurred while processing your request", {
       status: 500,
     });
   }
