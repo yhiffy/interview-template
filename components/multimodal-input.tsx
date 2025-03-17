@@ -290,6 +290,14 @@ function PureMultimodalInput({
         </div>
       )}
 
+      <input
+        type="file"
+        ref={invoiceFileInputRef}
+        className="hidden"
+        onChange={handleInvoiceFileChange}
+        accept="application/pdf,image/*"
+      />
+
       <Textarea
         ref={textareaRef}
         placeholder="Send a message..."
@@ -316,6 +324,10 @@ function PureMultimodalInput({
 
       <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
         <AttachmentsButton fileInputRef={fileInputRef} isLoading={isLoading} />
+        <InvoiceButton
+          invoiceFileInputRef={invoiceFileInputRef}
+          isLoading={isLoading}
+        />
       </div>
 
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
@@ -420,3 +432,27 @@ const SendButton = memo(PureSendButton, (prevProps, nextProps) => {
   if (prevProps.input !== nextProps.input) return false;
   return true;
 });
+
+function PureInvoiceButton({
+  invoiceFileInputRef,
+  isLoading,
+}: {
+  invoiceFileInputRef: React.MutableRefObject<HTMLInputElement | null>;
+  isLoading: boolean;
+}) {
+  return (
+    <Button
+      className="rounded-full p-1.5 h-fit border dark:border-zinc-600 mr-2 hover:dark:bg-zinc-900 hover:bg-zinc-200"
+      variant="ghost"
+      onClick={(e) => {
+        e.preventDefault();
+        invoiceFileInputRef.current?.click();
+      }}
+      disabled={isLoading}
+    >
+      Upload Invoice
+    </Button>
+  );
+}
+
+export const InvoiceButton = memo(PureInvoiceButton);
