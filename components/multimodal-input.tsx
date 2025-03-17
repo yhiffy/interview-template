@@ -1,10 +1,11 @@
 "use client";
 
-import type {
-  Attachment,
-  ChatRequestOptions,
-  CreateMessage,
-  Message,
+import {
+  generateId,
+  type Attachment,
+  type ChatRequestOptions,
+  type CreateMessage,
+  type Message,
 } from "ai";
 import cx from "classnames";
 import type React from "react";
@@ -223,6 +224,23 @@ function PureMultimodalInput({
           const data = await res.json();
 
           const userContent = `Please analyze this invoice:\n\n pdfContent: ${data.rawText}`;
+          if (!data.isInvoice) {
+            const userMessage: Message = {
+              id: generateId(),
+              role: "user",
+              content: userContent,
+              createdAt: new Date(),
+            };
+            setMessages((messages) => [...messages, userMessage]);
+            const assistantMessage: Message = {
+              id: generateId(),
+              role: "assistant",
+              content: "This is not an invoice, please upload an invoice.",
+              createdAt: new Date(),
+            };
+            setMessages((messages) => [...messages, assistantMessage]);
+            return;
+          }
           await append({
             role: "user",
             content: userContent,
