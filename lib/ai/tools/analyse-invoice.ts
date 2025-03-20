@@ -26,8 +26,7 @@ export const analyseInvoice = tool({
       .describe("The line items of the invoice."),
   }),
   execute: async (args) => {
-    console.log("args", args);
-    const {
+    let {
       vendorName,
       customerName,
       invoiceNumber,

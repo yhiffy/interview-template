@@ -18,6 +18,7 @@
     "db:up": "drizzle-kit up"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^1.1.18",
     "@ai-sdk/fireworks": "^0.1.8",
     "@ai-sdk/openai": "1.1.9",
     "@codemirror/lang-javascript": "^6.2.2",
@@ -76,6 +77,7 @@
     "swr": "^2.2.5",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
+    "unstorage": "^1.15.0",
     "usehooks-ts": "^3.1.0",
     "zod": "^3.23.8"
   },

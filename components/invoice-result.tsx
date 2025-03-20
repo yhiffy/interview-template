@@ -22,8 +22,7 @@ export const InvoiceToolResult = ({
   if (result === "Duplicate invoice found!") {
     return;
   }
-  console.log("result", result);
-  // const parsed = JSON.parse(result);
+
   return (
     <Card className="w-full max-w-sm shadow-md">
       <CardHeader>
@@ -75,8 +74,8 @@ export const InvoiceToolResult = ({
                   >
                     <td className="py-1 pr-2">{item.description}</td>
                     <td className="py-1 pr-2">{item.quantity}</td>
-                    <td className="py-1 pr-2">{item.unit_price}</td>
-                    <td className="py-1">{item.line_total}</td>
+                    <td className="py-1 pr-2">{item.unitPrice}</td>
+                    <td className="py-1">{item.lineTotal}</td>
                   </tr>
                 ))}
               </tbody>

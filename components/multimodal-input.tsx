@@ -203,6 +203,7 @@ function PureMultimodalInput({
       if (files.length === 0) return;
 
       const file = files[0];
+      const fileType = file.type;
 
       try {
         const result = await uploadFile(file);
@@ -211,7 +212,7 @@ function PureMultimodalInput({
           toast.error("Failed to upload invoice");
           return;
         }
-        console.log("Uploaded invoice:", result);
+        // if (fileType.startsWith("image/")) {
         await append(
           {
             role: "user",

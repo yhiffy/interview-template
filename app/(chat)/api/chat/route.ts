@@ -1,6 +1,7 @@
 import {
   type Message,
   createDataStreamResponse,
+  generateObject,
   smoothStream,
   streamText,
 } from "ai";
@@ -26,6 +27,8 @@ import { updateDocument } from "@/lib/ai/tools/update-document";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { analyseInvoice } from "@/lib/ai/tools/analyse-invoice";
+import { z } from "zod";
+import { anthropic } from "@ai-sdk/anthropic";
 
 export const maxDuration = 60;
 
@@ -60,6 +63,54 @@ export async function POST(request: Request) {
     messages: [{ ...userMessage, createdAt: new Date(), chatId: id }],
   });
 
+  const pdf = userMessage.experimental_attachments?.find(
+    (att) => att.contentType === "application/pdf"
+  );
+  if (pdf) {
+    const pdfBuffer = await fetch(pdf.url).then((res) => res.arrayBuffer());
+    const schema = z.object({
+      vendorName: z.string().describe("The name of the vendor."),
+      customerName: z.string().describe("The name of the customer."),
+      invoiceNumber: z.string().describe("The invoice number."),
+      invoiceDate: z.string().describe("The invoice date."),
+      dueDate: z.string().describe("The due date."),
+      amount: z.string().describe("The amount."),
+      lineItems: z
+        .array(
+          z.object({
+            description: z
+              .string()
+              .describe("The description of the line item."),
+            quantity: z.number().describe("The quantity of the line item."),
+            unitPrice: z.string().describe("The unit price of the line item."),
+            lineTotal: z.string().describe("The line total of the line item."),
+          })
+        )
+        .describe("The line items of the invoice."),
+    });
+    const result = await generateObject({
+      model: anthropic("claude-3-5-sonnet-latest"),
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: userMessage.content },
+            { type: "file", data: pdfBuffer, mimeType: "application/pdf" },
+          ],
+        },
+      ],
+      schema,
+    });
+
+    messages.push({
+      id: generateUUID(),
+      role: "assistant",
+      content: `[PDF invoice analysis]: ${JSON.stringify(result.object)}`,
+      createdAt: new Date(),
+    });
+    userMessage.experimental_attachments =
+      userMessage.experimental_attachments?.filter((att) => att !== pdf);
+  }
   return createDataStreamResponse({
     execute: (dataStream) => {
       const result = streamText({
