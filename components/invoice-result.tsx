@@ -22,15 +22,16 @@ export const InvoiceToolResult = ({
   if (result === "Duplicate invoice found!") {
     return;
   }
-  const parsed = JSON.parse(result);
+  console.log("result", result);
+  // const parsed = JSON.parse(result);
   return (
     <Card className="w-full max-w-sm shadow-md">
       <CardHeader>
         <CardTitle className="text-lg font-semibold">
-          Invoice: #{parsed.invoice_number}
+          Invoice: #{result.invoiceNumber}
         </CardTitle>
         <CardDescription className="text-sm">
-          Vendor: {parsed.vendor_name}
+          Vendor: {result.vendorName}
         </CardDescription>
       </CardHeader>
 
@@ -38,19 +39,19 @@ export const InvoiceToolResult = ({
         <div className="text-sm">
           <p>
             <span className="font-semibold">Customer:</span>{" "}
-            {parsed.customer_name}
+            {result.customerName}
           </p>
           <p>
             <span className="font-semibold">Invoice Date:</span>{" "}
-            {parsed.invoice_date}
+            {result.invoiceDate}
           </p>
           <p>
-            <span className="font-semibold">Due Date:</span> {parsed.due_date}
+            <span className="font-semibold">Due Date:</span> {result.dueDate}
           </p>
-          <p className="font-semibold">Amount: {parsed.amount}</p>
+          <p className="font-semibold">Amount: {result.amount}</p>
         </div>
 
-        {Array.isArray(parsed.line_items) && parsed.line_items.length > 0 && (
+        {Array.isArray(result.lineItems) && result.lineItems.length > 0 && (
           <div className="mt-4">
             <p className="text-sm font-semibold mb-2">Line Items</p>
             <table className="w-full text-sm border-collapse">
@@ -63,7 +64,7 @@ export const InvoiceToolResult = ({
                 </tr>
               </thead>
               <tbody>
-                {parsed.line_items.map((item: any, idx: number) => (
+                {result.lineItems.map((item: any, idx: number) => (
                   <tr
                     key={idx}
                     className={

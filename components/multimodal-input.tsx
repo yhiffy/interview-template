@@ -143,7 +143,7 @@ function PureMultimodalInput({
     chatId,
   ]);
 
-  const uploadFile = async (file: File) => {
+  const uploadFile = useCallback(async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
 
@@ -168,7 +168,7 @@ function PureMultimodalInput({
     } catch (error) {
       toast.error("Failed to upload file, please try again!");
     }
-  };
+  }, []);
 
   const handleFileChange = useCallback(
     async (event: ChangeEvent<HTMLInputElement>) => {
@@ -193,7 +193,7 @@ function PureMultimodalInput({
         setUploadQueue([]);
       }
     },
-    [setAttachments]
+    [setAttachments, uploadFile]
   );
 
   const invoiceFileInputRef = useRef<HTMLInputElement>(null);
@@ -203,64 +203,24 @@ function PureMultimodalInput({
       if (files.length === 0) return;
 
       const file = files[0];
-      const fileType = file.type;
 
       try {
-        if (fileType === "application/pdf") {
-          const formData = new FormData();
-          formData.append("file", file);
-
-          const res = await fetch("/api/files/parse-pdf", {
-            method: "POST",
-            body: formData,
-          });
-
-          if (!res.ok) {
-            const errData = await res.json();
-            toast.error(errData.error || "Failed to upload invoice!");
-            return;
-          }
-
-          const data = await res.json();
-
-          const userContent = `Please analyze this invoice:\n\n pdfContent: ${data.rawText}`;
-          if (!data.isInvoice) {
-            const userMessage: Message = {
-              id: generateId(),
-              role: "user",
-              content: userContent,
-              createdAt: new Date(),
-            };
-            setMessages((messages) => [...messages, userMessage]);
-            const assistantMessage: Message = {
-              id: generateId(),
-              role: "assistant",
-              content: "This is not an invoice, please upload an invoice.",
-              createdAt: new Date(),
-            };
-            setMessages((messages) => [...messages, assistantMessage]);
-            return;
-          }
-          await append({
-            role: "user",
-            content: userContent,
-          });
-        } else if (fileType.startsWith("image/")) {
-          const uploadResult = await uploadFile(file);
-          if (!uploadResult) {
-            toast.error("Failed to upload image as invoice");
-            return;
-          }
-          await append(
-            {
-              role: "user",
-              content: "Please analyze this invoice.",
-            },
-            { experimental_attachments: [uploadResult] }
-          );
+        const result = await uploadFile(file);
+        if (!result) {
+          console.error("Failed to upload invoice!");
+          toast.error("Failed to upload invoice");
+          return;
         }
-      } catch (err) {
-        console.error("OCR upload error:", err);
+        console.log("Uploaded invoice:", result);
+        await append(
+          {
+            role: "user",
+            content: "Please analyze this invoice.",
+          },
+          { experimental_attachments: [result] }
+        );
+      } catch (error) {
+        console.error("Invoice upload error:", error);
         toast.error("Error uploading invoice");
       } finally {
         if (invoiceFileInputRef.current) {
@@ -268,7 +228,7 @@ function PureMultimodalInput({
         }
       }
     },
-    [append, invoiceFileInputRef]
+    [append, uploadFile]
   );
 
   return (
